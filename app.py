@@ -1,6 +1,6 @@
 from flask import Flask, render_template
 import raspieats
-
+import catchem
  
 app = Flask(__name__)
 
@@ -15,6 +15,11 @@ def game():
     my_game = raspieats.Game()
     my_game.run()
     return "Game Ran"
+
+@app.route('/game2')
+
+def game2():
+    return "Game2 Ran"
 
 
 
