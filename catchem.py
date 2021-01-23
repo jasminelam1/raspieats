@@ -1,6 +1,6 @@
 from sense_hat import SenseHat
 from time import sleep
-import random
+from random import choice, randint
 
 sense = SenseHat()
 sense.clear()
@@ -8,7 +8,7 @@ sense.clear()
 game_over = False
 
 catcher_x = 0
-berry_x = random.randint(0, 7)
+berry_x = randint(0, 7)
 berry_y = 0
 
 score = 0
@@ -28,54 +28,107 @@ l = (128, 255, 128) #lightGreen
 
 #Intro text or animation
 # 3, 2, 1 countdown
-def move_left():
-    global catcher_x 
-    if catcher_x >= 1:
-        catcher_x -= 1
-    else:
-        catcher_x = 7
 
-def move_right():
-    global catcher_x
-    if catcher_x <= 6:
-        catcher_x += 1
-    else:
-        catcher_x = 0
+class Game:
+    def __init__(self):
+        self.game_over = False
+        self.catcher_x = 0
+        self.berries = [
+            {
+                "name": "potato",
+                "color": y,
+                "pos_x": 0,
+                "pos_y": 0,
+                "points": 10
+            },
+            {
+                "name": "blackberry",
+                "color": w,
+                "pos_x": 4,
+                "pos_y": 0,
+                "points": 2
+            },
+            {
+                "name": "strawberry",
+                "color": r,
+                "pos_x": 6,
+                "pos_y": 0,
+                "points": 3
+            },
+            {
+                "name": "blueberry",
+                "color": b,
+                "pos_x": 3,
+                "pos_y": 0,
+                "points": 4
+            },
+            {
+                "name": "poison",
+                "color": y,
+                "pos_x": 2,
+                "pos_y": 0,
+                "points": -5
+            }
+        ]
+        self.berry = choice(self.berries)
+        self.berry_x = self.berry["pos_x"]
+        self.berry_y = self.berry["pos_y"]
+        self.berry_color = self.berry["color"]
+        self.score = 0
+
+    def move_left(self):
+        if self.catcher_x >= 1:
+            self.catcher_x -= 1
+        else:
+            self.catcher_x = 7
+
+    def move_right(self):
+        if self.catcher_x <= 6:
+            self.catcher_x += 1
+        else:
+            self.catcher_x = 0
 
 
-def berry_fall():
-    global berry_y, game_over
-    if berry_y <= 7:
-        berry_y += 1
-        sleep(0.2)
-    else:
-        sense.show_message("GAME OVER")
-        game_over = True
+    def caughtit():
+        if berry_x == catcher_x:
+            score += berry["points"]
+            sense.show_message(score)
+
+    def berry_fall(self):
+        if self.berry_y <= 7:
+            self.berry_y += 1
+            sleep(0.2)
+            sense.set_pixel(self.berry_x, self.berry_y, self.berry_color)
+        else:
+            sense.show_message("GAME OVER")
+            game_over = True
+            sense.clear()
+        
+    def update(self):
         sense.clear()
-    
-def update():
-    global berry_x, berry_y, catcher_x, game_over
-    sense.clear()
-    #berry_fall()
-    if berry_y < 7:
-        berry_y += 1
+        #berry_fall()
+        if self.berry_y < 7:
+            self.berry_y += 1
+            sense.set_pixel(self.catcher_x, 7, d)
+            sense.set_pixel(self.berry_x, self.berry_y, l)
+            sleep(0.2)
+        else:
+            sense.show_message("GAME OVER")
+            game_over = True
+            sense.clear()
         sense.set_pixel(catcher_x, 7, d)
-        sense.set_pixel(berry_x, berry_y, l)
-        sleep(0.2)
-    else:
-        sense.show_message("GAME OVER")
-        game_over = True
-        sense.clear()
 
+    def run(self):
+        while game_over == False:
+            self.update()
+            for event in sense.stick.get_events():
+                print(event)
+                if event.action == "pressed" and event.direction == "left":
+                    self.move_left()
+                elif event.action == "pressed" and event.direction == "right":
+                    self.move_right()
+            sleep(0.1)
+            self.update()
 
-
-while game_over == False:
-    update()
-    for event in sense.stick.get_events():
-        print(event)
-        if event.action == "pressed" and event.direction == "left":
-            move_left()
-        elif event.action == "pressed" and event.direction == "right":
-            move_right()
-    sleep(0.1)
-    update()
+g = Game()
+g.run()
